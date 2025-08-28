@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "statesman"
+version = "0.1.0"
+description = "Library for managing file-based states in computational workflows"
+authors = [{name = "Expert Engineer", email = "expert@example.com"}]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+  "pydantic>=2.0",
+  "pyyaml>=6.0",
+  "typer>=0.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "ruff>=0.1"]
+
+[project.scripts]
+statesman = "statesman.cli.main:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 88
