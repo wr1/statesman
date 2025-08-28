@@ -1,10 +1,10 @@
 """Demo workflow using statesman."""
 
 import json
-from pathlib import Path
 
 from statesman.core.base import Statesman
 from statesman.models.state import FileState
+from statesman.utils.config_utils import hash_config_section
 
 
 class P1Step(Statesman):
@@ -18,9 +18,8 @@ class P1Step(Statesman):
                 json.dump(self.config["geometry"], f)
             with open(output_vtu, "w") as f:
                 f.write("Dummy VTU data")
-        self.save_state(
-            "geometry", self.has_section_changed("geometry")
-        )  # Actually save hash
+        current_hash = hash_config_section(self.config.get("geometry", {}))
+        self.save_state("geometry", current_hash)
 
 
 class P2Step(Statesman):

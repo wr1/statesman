@@ -17,7 +17,10 @@ uv pip install statesman
 
 Define workflow steps by subclassing `Statesman` and using Pydantic models for state validation.
 
-See `examples/demo_workflow.py` for a demonstration.
+See `examples/demo_workflow.py` for a demonstration. To run the demo:
+```bash
+python examples/demo_workflow.py
+```
 
 ## Development
 
