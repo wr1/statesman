@@ -1,5 +1,6 @@
 """Demo workflow using statesman."""
 
+from pathlib import Path
 import json
 
 from statesman.core.base import Statesman
