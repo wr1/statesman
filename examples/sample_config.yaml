@@ -1,6 +1,4 @@
+workdir: demo_dir
 geometry:
-  length: 10
-  width: 5
-materials:
-  type: steel
-  thickness: 0.1
+  param1: value1
+  param2: value2

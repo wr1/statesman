@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "statesman"
 version = "0.1.0"
 description = "Library for managing file-based states in computational workflows"
-authors = [{ name = "Expert Engineer", email = "expert@example.com" }]
+authors = [{ name = "wr1", email = "8971152+wr1@users.noreply.github.com" }]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.8"
@@ -14,6 +14,7 @@ dependencies = [
   "pydantic>=2.0",
   "pyyaml>=6.0",
   "treeparse",
+  "pytest-cov"
 ]
 
 

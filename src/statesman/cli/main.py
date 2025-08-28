@@ -9,11 +9,11 @@ from statesman.core.base import Statesman
 logging.basicConfig(level=logging.INFO)
 
 
-def check(workdir: Optional[str] = None, config: Optional[str] = None):
+def check(config: Optional[str] = None):
     """Check states in a workflow."""
-    if not workdir or not config:
-        raise ValueError("Workdir and config are required.")
-    statesman = Statesman(workdir, config)
+    if not config:
+        raise ValueError("Config is required.")
+    statesman = Statesman(config)
     logging.info("State check completed.")
 
 
@@ -33,18 +33,11 @@ check_cmd = command(
     callback=check,
     options=[
         option(
-            flags=["--workdir", "-w"],
-            help="Working directory",
-            arg_type=str,
-            required=True,
-            sort_key=0,
-        ),
-        option(
             flags=["--config", "-c"],
             help="Config file path",
             arg_type=str,
             required=True,
-            sort_key=1,
+            sort_key=0,
         ),
     ],
 )

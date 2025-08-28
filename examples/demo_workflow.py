@@ -13,6 +13,7 @@ class P1Step(Statesman):
     output_files = ["output.json", "output.vtu"]
 
     def _execute(self):
+        self.logger.info("Executing P1Step: Interpolating parameters.")
         output_json = self.workdir / "output.json"
         output_vtu = self.workdir / "output.vtu"
         with open(output_json, "w") as f:
@@ -32,6 +33,7 @@ class P2Step(Statesman):
     dependent_sections = ["geometry"]
 
     def _execute(self):
+        self.logger.info("Executing P2Step: Meshing according to parameters.")
         output_json2 = self.workdir / "output2.json"
         with open(output_json2, "w") as f:
             json.dump({"meshed": True}, f)
@@ -39,10 +41,8 @@ class P2Step(Statesman):
 
 # Medium complex demo
 if __name__ == "__main__":
-    workdir = Path(__file__).parent / "demo_dir"
-    workdir.mkdir(exist_ok=True)
     config_path = Path(__file__).parent / "sample_config.yaml"
-    p1 = P1Step(str(workdir), str(config_path))
+    p1 = P1Step(str(config_path))
     p1.run()
-    p2 = P2Step(str(workdir), str(config_path))
+    p2 = P2Step(str(config_path))
     p2.run()
