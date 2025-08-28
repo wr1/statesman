@@ -20,19 +20,17 @@ class FileState(BaseModel):
             raise ValueError(f"File does not exist: {v}")
         return v
 
-    @field_validator("non_empty")
-    @classmethod
-    def check_non_empty(cls, v: bool, values) -> bool:
-        path = values.data["path"]
+    @field_validator("non_empty", mode="after")
+    def check_non_empty(cls, v: bool, info) -> bool:
+        path = info.data["path"]
         if v and not is_file_non_empty(path):
             raise ValueError(f"File is empty: {path}")
         return v
 
-    @field_validator("newer_than")
-    @classmethod
-    def check_newer_than(cls, v: Path | None, values) -> Path | None:
+    @field_validator("newer_than", mode="after")
+    def check_newer_than(cls, v: Path | None, info) -> Path | None:
         if v:
-            path = values.data["path"]
+            path = info.data["path"]
             if get_file_mtime(path) <= get_file_mtime(v):
                 raise ValueError(f"File {path} is not newer than {v}")
         return v

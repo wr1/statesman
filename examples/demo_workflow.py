@@ -1,45 +1,40 @@
 """Demo workflow using statesman."""
 
-from pathlib import Path
 import json
+from pathlib import Path
 
-from statesman.core.base import Statesman
-from statesman.models.state import FileState
-from statesman.utils.config_utils import hash_config_section
+from statesman.core.base import Statesman, ManagedFile
 
 
 class P1Step(Statesman):
     """Step 1: Interpolate parameters."""
 
-    def run(self):
+    dependent_sections = ["geometry"]
+    output_files = ["output.json", "output.vtu"]
+
+    def _execute(self):
         output_json = self.workdir / "output.json"
         output_vtu = self.workdir / "output.vtu"
-        if not output_json.exists():
-            with open(output_json, "w") as f:
-                json.dump(self.config["geometry"], f)
-            with open(output_vtu, "w") as f:
-                f.write("Dummy VTU data")
-        current_hash = hash_config_section(self.config.get("geometry", {}))
-        self.save_state("geometry", current_hash)
+        with open(output_json, "w") as f:
+            json.dump(self.config["geometry"], f)
+        with open(output_vtu, "w") as f:
+            f.write("Dummy VTU data")
 
 
 class P2Step(Statesman):
     """Step 2: Mesh according to parameters."""
 
-    def validate(self):
-        json_path = self.workdir / "output.json"
-        vtu_path = self.workdir / "output.vtu"
-        state = FileState(path=json_path, newer_than=self.config_path)
-        self.validate_state(state)
-        state = FileState(path=vtu_path, newer_than=self.config_path)
-        self.validate_state(state)
+    input_files = [
+        ManagedFile(name="output.json", non_empty=True, newer_than="config"),
+        ManagedFile(name="output.vtu", non_empty=True, newer_than="config"),
+    ]
+    output_files = ["output2.json"]
+    dependent_sections = ["geometry"]
 
-    def run(self):
-        self.validate()
+    def _execute(self):
         output_json2 = self.workdir / "output2.json"
-        if not output_json2.exists() or self.has_section_changed("geometry"):
-            with open(output_json2, "w") as f:
-                json.dump({"meshed": True}, f)
+        with open(output_json2, "w") as f:
+            json.dump({"meshed": True}, f)
 
 
 # Medium complex demo
