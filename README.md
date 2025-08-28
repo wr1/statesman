@@ -1,0 +1,26 @@
+# Statesman
+
+Statesman is a Python library for managing states in file-system-based workflows, enabling dependency checks, restarts, and partial iterations for expensive computational steps.
+
+## Installation
+
+```bash
+pip install statesman
+```
+
+Alternatively, using uv:
+```bash
+uv pip install statesman
+```
+
+## Usage
+
+Define workflow steps by subclassing `Statesman` and using Pydantic models for state validation.
+
+See `examples/demo_workflow.py` for a demonstration.
+
+## Development
+
+- Install dependencies with uv: `uv sync --all-extras`
+- Run tests: `uv run pytest`
+- Format and check code: `uv run ruff format` and `uv run ruff check --fix`
