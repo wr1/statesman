@@ -1,0 +1,38 @@
+"""Pydantic models for states."""
+
+from pathlib import Path
+from pydantic import BaseModel, field_validator
+
+from statesman.utils.file_utils import get_file_mtime, is_file_non_empty
+
+
+class FileState(BaseModel):
+    """Model for file state validation."""
+
+    path: Path
+    non_empty: bool = True
+    newer_than: Path | None = None
+
+    @field_validator("path")
+    @classmethod
+    def check_exists(cls, v: Path) -> Path:
+        if not v.exists():
+            raise ValueError(f"File does not exist: {v}")
+        return v
+
+    @field_validator("non_empty")
+    @classmethod
+    def check_non_empty(cls, v: bool, values) -> bool:
+        path = values.data["path"]
+        if v and not is_file_non_empty(path):
+            raise ValueError(f"File is empty: {path}")
+        return v
+
+    @field_validator("newer_than")
+    @classmethod
+    def check_newer_than(cls, v: Path | None, values) -> Path | None:
+        if v:
+            path = values.data["path"]
+            if get_file_mtime(path) <= get_file_mtime(v):
+                raise ValueError(f"File {path} is not newer than {v}")
+        return v
