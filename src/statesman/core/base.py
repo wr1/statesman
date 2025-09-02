@@ -8,6 +8,7 @@ import yaml
 from pydantic import BaseModel, ValidationError
 
 from statesman.utils.config_utils import hash_config_section
+from statesman.utils.file_utils import get_file_mtime
 
 from statesman.models.state import FileState
 
@@ -94,6 +95,17 @@ class Statesman:
                 self.logger.warning(f"Output file '{out_name}' is missing or empty. Needs run.")
                 return True
             self.logger.info(f"Output file '{out_name}' exists and is non-empty.")
+
+        # Check if any input is newer than any output
+        for out_name in self.output_files:
+            out_path = self.workdir / out_name
+            out_mtime = get_file_mtime(out_path)
+            for mf in self.input_files:
+                in_path = self.workdir / mf.name
+                in_mtime = get_file_mtime(in_path)
+                if in_mtime > out_mtime:
+                    self.logger.warning(f"Input '{mf.name}' is newer than output '{out_name}'. Needs run.")
+                    return True
 
         # Check if any dependent section changed
         for section in self.dependent_sections:

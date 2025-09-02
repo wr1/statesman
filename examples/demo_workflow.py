@@ -1,6 +1,7 @@
 """Demo workflow using statesman."""
 
 import json
+import time
 from pathlib import Path
 
 from statesman.core.base import Statesman, ManagedFile
@@ -29,7 +30,9 @@ class P2Step(Statesman):
         ManagedFile(name="output.json", non_empty=True, newer_than="config"),
         ManagedFile(name="output.vtu", non_empty=True, newer_than="config"),
     ]
-    output_files = ["output2.json"]
+
+    of1 = "output2.json"
+    output_files = [of1]
     dependent_sections = ["geometry"]
 
     def _execute(self):
@@ -46,3 +49,13 @@ if __name__ == "__main__":
     p1.run()
     p2 = P2Step(str(config_path))
     p2.run()
+
+    # Demonstrate input file management: if input is newer than output, needs rerun
+    print("Before modification, needs_run:", p2.needs_run())  # Should be False
+    time.sleep(1)  # Ensure timestamp difference
+    input_path = p2.workdir / "output.json"
+    with open(input_path, "w") as f:
+        json.dump({"geometry": "modified"}, f)
+    print("Modified input file to make it newer.")
+    print("After modification, needs_run:", p2.needs_run())  # Should be True
+    p2.run()  # Should re-execute

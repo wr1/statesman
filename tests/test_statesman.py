@@ -85,6 +85,7 @@ def test_file_utils(tmp_path):
 
 
 class TestStep(Statesman):
+    __test__ = False
     dependent_sections = ["test"]
     output_files = ["output.txt"]
     input_files = [ManagedFile(name="input.txt", non_empty=True, newer_than="config")]
@@ -109,6 +110,7 @@ def test_needs_run_scenarios(tmp_path):
     config_path = tmp_path / "config.yaml"
     config_path.write_text("workdir: work_dir")
     sm = TestStep(str(config_path))
+    time.sleep(1)  # Ensure subsequent file operations have later timestamps
 
     # Missing input
     assert sm.needs_run()  # Input missing
@@ -116,6 +118,7 @@ def test_needs_run_scenarios(tmp_path):
     # Create input
     input_path = sm.workdir / "input.txt"
     input_path.write_text("data")
+    time.sleep(1)  # Ensure input mtime > config mtime
 
     # Missing output
     assert sm.needs_run()
@@ -123,6 +126,7 @@ def test_needs_run_scenarios(tmp_path):
     # Create output
     output_path = sm.workdir / "output.txt"
     output_path.write_text("data")
+    time.sleep(1)  # Ensure output mtime > input mtime
 
     # Changed section (initially no state)
     assert sm.needs_run()
@@ -133,7 +137,21 @@ def test_needs_run_scenarios(tmp_path):
 
     # Change section
     config_path.write_text("workdir: work_dir\ntest:\n  subkey: changed")
+    time.sleep(1)  # Ensure config mtime is distinct
     sm.config = sm.load_config()
+    assert sm.needs_run()
+
+    # Simulate updating input after config change to make it newer than config
+    time.sleep(1)
+    input_path.touch()
+
+    # Run the step to reset state and update outputs
+    sm.run()
+    assert not sm.needs_run()
+
+    # Test input newer than output
+    time.sleep(1)
+    input_path.touch()
     assert sm.needs_run()
 
 
