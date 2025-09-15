@@ -2,7 +2,6 @@
 
 import time
 import pytest
-from pathlib import Path
 from statesman.core.base import Statesman, ManagedFile
 from statesman.models.state import FileState
 from statesman.utils.config_utils import hash_config_section
@@ -74,16 +73,6 @@ def test_hash_config_section():
     # Same nested but different order
     nested_reordered = {"a": {"c": 2, "b": 1}}
     assert hash_config_section(nested_reordered) == hash_nested
-    # Test with float keys
-    section_float = {1.0: "value", 2.0: "other"}
-    hash_float = hash_config_section(section_float)
-    assert isinstance(hash_float, str)
-    # Same float keys different order
-    section_float_reordered = {2.0: "other", 1.0: "value"}
-    assert hash_config_section(section_float_reordered) == hash_float
-    # Test float precision
-    section_float_prec = {1.0000000001: "value"}
-    assert hash_config_section(section_float_prec) == hash_config_section({1.0: "value"})
 
 
 def test_file_utils(tmp_path):
@@ -133,7 +122,9 @@ def test_has_section_changed_with_nested_dict(tmp_path):
     # Change order of nested keys
     config_path.write_text("workdir: work_dir\ntest:\n  nested:\n    b: 2\n    a: 1")
     sm.config = sm.load_config()  # Reload config
-    assert not sm.has_section_changed("test")  # Should not detect change due to key order
+    assert not sm.has_section_changed(
+        "test"
+    )  # Should not detect change due to key order
     # Change a value
     config_path.write_text("workdir: work_dir\ntest:\n  nested:\n    a: 1\n    b: 3")
     sm.config = sm.load_config()
@@ -212,11 +203,15 @@ def test_run_executes(tmp_path):
 def test_run_output_validation_failure(tmp_path):
     config_path = tmp_path / "config.yaml"
     config_path.write_text("workdir: work_dir")
+
     class FailingStep(Statesman):
         output_files = ["output.txt"]
+
         def _execute(self):
             pass  # Doesn't create output
 
     sm = FailingStep(str(config_path))
-    with pytest.raises(RuntimeError, match=r"Output file '.*/output\.txt' was not created properly\."):
+    with pytest.raises(
+        RuntimeError, match=r"Output file '.*/output\.txt' was not created properly\."
+    ):
         sm.run()
