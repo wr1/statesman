@@ -10,6 +10,7 @@ from statesman.core.base import Statesman, ManagedFile
 class P1Step(Statesman):
     """Step 1: Interpolate parameters."""
 
+    workdir_key = 'paths.workdir'
     dependent_sections = ["geometry"]
     output_files = ["output.json", "output.vtu"]
 
@@ -26,6 +27,7 @@ class P1Step(Statesman):
 class P2Step(Statesman):
     """Step 2: Mesh according to parameters."""
 
+    workdir_key = 'paths.workdir'
     input_files = [
         ManagedFile(name="output.json", non_empty=True, newer_than="config"),
         ManagedFile(name="output.vtu", non_empty=True, newer_than="config"),

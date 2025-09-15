@@ -27,6 +27,7 @@ class Statesman:
     input_files: List[ManagedFile] = []
     output_files: List[str] = []
     dependent_sections: List[str] = []
+    workdir_key: str = 'workdir'
 
     def __init__(self, config_path: str):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -34,7 +35,7 @@ class Statesman:
         self.config_path = Path(config_path).resolve()
         self.logger.info(f"Initializing Statesman with config: {self.config_path}")
         self.config = self.load_config()
-        workdir_str = self.config.get('workdir', '.')
+        workdir_str = self._get_config_value(self.workdir_key, '.')
         self.workdir = (self.config_path.parent / Path(workdir_str)).resolve()
         if not self.workdir.exists():
             self.logger.info(f"Workdir {self.workdir} does not exist. Creating it.")
@@ -43,6 +44,17 @@ class Statesman:
             self.logger.info(f"Workdir {self.workdir} already exists.")
         self.state_file = self.workdir / ".statesman_state.yaml"
         self.previous_states = self.load_previous_states()
+
+    def _get_config_value(self, key: str, default: Any) -> Any:
+        """Get a value from config using dotted key path."""
+        keys = key.split('.')
+        value = self.config
+        for k in keys:
+            if isinstance(value, dict) and k in value:
+                value = value[k]
+            else:
+                return default
+        return value
 
     def load_config(self) -> Dict[str, Any]:
         """Load configuration from YAML file."""
