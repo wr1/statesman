@@ -52,6 +52,14 @@ if __name__ == "__main__":
     p2 = P2Step(str(config_path))
     p2.run()
 
+    print("After initial run, p2.needs_run():", p2.needs_run())  # Should be False
+
+    # Demonstrate that nested dict order doesn't affect change detection
+    print("Modifying config with same nested dict but different key order...")
+    config_path.write_text("paths:\n  workdir: demo_dir\ngeometry:\n  params:\n    param2: value2\n    param1: value1\n")
+    p2.config = p2.load_config()  # Reload config
+    print("After reloading config with reordered keys, p2.needs_run():", p2.needs_run())  # Should still be False
+
     # Demonstrate input file management: if input is newer than output, needs rerun
     print("Before modification, needs_run:", p2.needs_run())  # Should be False
     time.sleep(1)  # Ensure timestamp difference

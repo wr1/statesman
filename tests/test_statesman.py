@@ -68,6 +68,22 @@ def test_hash_config_section():
     assert hash1 == hash2
     different = {"key": "different"}
     assert hash_config_section(different) != hash1
+    # Test with nested dict
+    nested = {"a": {"b": 1, "c": 2}}
+    hash_nested = hash_config_section(nested)
+    # Same nested but different order
+    nested_reordered = {"a": {"c": 2, "b": 1}}
+    assert hash_config_section(nested_reordered) == hash_nested
+    # Test with float keys
+    section_float = {1.0: "value", 2.0: "other"}
+    hash_float = hash_config_section(section_float)
+    assert isinstance(hash_float, str)
+    # Same float keys different order
+    section_float_reordered = {2.0: "other", 1.0: "value"}
+    assert hash_config_section(section_float_reordered) == hash_float
+    # Test float precision
+    section_float_prec = {1.0000000001: "value"}
+    assert hash_config_section(section_float_prec) == hash_config_section({1.0: "value"})
 
 
 def test_file_utils(tmp_path):
@@ -104,6 +120,23 @@ def test_has_section_changed(tmp_path):
     assert not sm.has_section_changed("test")
     config_path.write_text("workdir: work_dir\ntest:\n  subkey: changed")
     sm.config = sm.load_config()  # Reload config
+    assert sm.has_section_changed("test")
+
+
+def test_has_section_changed_with_nested_dict(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("workdir: work_dir\ntest:\n  nested:\n    a: 1\n    b: 2")
+    sm = TestStep(str(config_path))
+    assert sm.has_section_changed("test")
+    sm.save_state("test", hash_config_section(sm.config.get("test", {})))
+    assert not sm.has_section_changed("test")
+    # Change order of nested keys
+    config_path.write_text("workdir: work_dir\ntest:\n  nested:\n    b: 2\n    a: 1")
+    sm.config = sm.load_config()  # Reload config
+    assert not sm.has_section_changed("test")  # Should not detect change due to key order
+    # Change a value
+    config_path.write_text("workdir: work_dir\ntest:\n  nested:\n    a: 1\n    b: 3")
+    sm.config = sm.load_config()
     assert sm.has_section_changed("test")
 
 
