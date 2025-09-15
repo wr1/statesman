@@ -10,7 +10,7 @@ from statesman.core.base import Statesman, ManagedFile
 class P1Step(Statesman):
     """Step 1: Interpolate parameters."""
 
-    workdir_key = 'paths.workdir'
+    workdir_key = "paths.workdir"
     dependent_sections = ["geometry"]
     output_files = ["output.json", "output.vtu"]
 
@@ -27,7 +27,7 @@ class P1Step(Statesman):
 class P2Step(Statesman):
     """Step 2: Mesh according to parameters."""
 
-    workdir_key = 'paths.workdir'
+    workdir_key = "paths.workdir"
     input_files = [
         ManagedFile(name="output.json", non_empty=True, newer_than="config"),
         ManagedFile(name="output.vtu", non_empty=True, newer_than="config"),
@@ -56,9 +56,13 @@ if __name__ == "__main__":
 
     # Demonstrate that nested dict order doesn't affect change detection
     print("Modifying config with same nested dict but different key order...")
-    config_path.write_text("paths:\n  workdir: demo_dir\ngeometry:\n  params:\n    param2: value2\n    param1: value1\n")
+    config_path.write_text(
+        "paths:\n  workdir: demo_dir\ngeometry:\n  params:\n    param2: value2\n    param1: value1\n"
+    )
     p2.config = p2.load_config()  # Reload config
-    print("After reloading config with reordered keys, p2.needs_run():", p2.needs_run())  # Should still be False
+    print(
+        "After reloading config with reordered keys, p2.needs_run():", p2.needs_run()
+    )  # Should still be False
 
     # Demonstrate input file management: if input is newer than output, needs rerun
     print("Before modification, needs_run:", p2.needs_run())  # Should be False
