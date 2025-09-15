@@ -1,7 +1,6 @@
 """CLI entry point for statesman."""
 
 import logging
-from typing import Optional
 
 from treeparse import cli, command, option
 from statesman.core.base import Statesman
