@@ -2,7 +2,6 @@
 
 import time
 import pytest
-from pathlib import Path
 from statesman.core.base import Statesman, ManagedFile
 from statesman.models.state import FileState
 from statesman.utils.config_utils import hash_config_section
@@ -18,6 +17,7 @@ def temp_dir(tmp_path):
 
 def test_file_state_validation(temp_dir):
     tmp_path, config = temp_dir
+    time.sleep(0.01)  # Ensure file is created after config for mtime difference
     file = tmp_path / "test.txt"
     file.write_text("data")
     state = FileState(path=file, newer_than=config)
@@ -178,11 +178,15 @@ def test_run_executes(tmp_path):
 def test_run_output_validation_failure(tmp_path):
     config_path = tmp_path / "config.yaml"
     config_path.write_text("workdir: work_dir")
+
     class FailingStep(Statesman):
         output_files = ["output.txt"]
+
         def _execute(self):
             pass  # Doesn't create output
 
     sm = FailingStep(str(config_path))
-    with pytest.raises(RuntimeError, match="Output file 'output.txt' was not created properly."):
+    with pytest.raises(
+        RuntimeError, match="Output file 'output.txt' was not created properly."
+    ):
         sm.run()
