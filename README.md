@@ -5,11 +5,6 @@ Statesman is a Python library for managing states in file-system-based workflows
 ## Installation
 
 ```bash
-pip install statesman
-```
-
-Alternatively, using uv:
-```bash
 uv pip install statesman
 ```
 

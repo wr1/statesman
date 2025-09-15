@@ -9,10 +9,8 @@ from statesman.core.base import Statesman
 logging.basicConfig(level=logging.INFO)
 
 
-def check(config: Optional[str] = None):
+def check(config: str):
     """Check states in a workflow."""
-    if not config:
-        raise ValueError("Config is required.")
     statesman = Statesman(config)
     logging.info("State check completed.")
 
