@@ -8,12 +8,16 @@ from typing import Any, Dict
 def sort_dict_recursive(d: Any) -> Any:
     """Recursively sort dictionary keys and round floats for consistent hashing."""
     if isinstance(d, dict):
+        for k in d.keys():
+            if isinstance(k, float):
+                raise ValueError(
+                    "Float keys are deprecated and not supported in config sections."
+                )
         new_d = {}
         for k, v in d.items():
-            if isinstance(k, float):
-                k = round(k, 10)
+            k = str(k)
             new_d[k] = sort_dict_recursive(v)
-        return {str(k): sort_dict_recursive(v) for k, v in sorted(new_d.items(), key=lambda x: str(x[0]))}
+        return {k: sort_dict_recursive(v) for k, v in sorted(new_d.items())}
     elif isinstance(d, list):
         return [sort_dict_recursive(item) for item in d]
     else:
