@@ -1,8 +1,10 @@
 """Utilities for config operations."""
 
 import hashlib
-import json
+from io import StringIO
 from typing import Any, Dict
+
+import ruamel.yaml as yaml
 
 
 def sort_dict_recursive(d: Any) -> Any:
@@ -27,6 +29,12 @@ def sort_dict_recursive(d: Any) -> Any:
 
 
 def hash_config_section(section: Dict[str, Any]) -> str:
-    """Compute SHA-256 hash of a config section with sorted keys and rounded floats."""
+    """Compute SHA-256 hash of a config section using ruamel.yaml for consistent string representation."""
+    # Sort the section recursively
     sorted_section = sort_dict_recursive(section)
-    return hashlib.sha256(json.dumps(sorted_section).encode()).hexdigest()
+    # Dump to YAML string with sorted keys for consistency
+    stream = StringIO()
+    y = yaml.YAML()
+    y.dump(sorted_section, stream)
+    yaml_str = stream.getvalue()
+    return hashlib.sha256(yaml_str.encode()).hexdigest()
