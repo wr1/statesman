@@ -2,10 +2,15 @@
 
 import logging
 
+from rich.logging import RichHandler
 from treeparse import cli, command, option
 from statesman.core.base import Statesman
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    handlers=[RichHandler()],
+)
 
 
 def check(config: str):

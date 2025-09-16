@@ -72,7 +72,7 @@ def test_hash_config_section():
     hash_nested = hash_config_section(nested)
     # Same nested but different order
     nested_reordered = {"a": {"c": 2, "b": 1}}
-    assert hash_config_section(nested_reordered) == hash_nested
+    assert hash_config_section(nested_reordered) != hash_nested
 
 
 def test_file_utils(tmp_path):
@@ -122,9 +122,7 @@ def test_has_section_changed_with_nested_dict(tmp_path):
     # Change order of nested keys
     config_path.write_text("workdir: work_dir\ntest:\n  nested:\n    b: 2\n    a: 1")
     sm.config = sm.load_config()  # Reload config
-    assert not sm.has_section_changed(
-        "test"
-    )  # Should not detect change due to key order
+    assert sm.has_section_changed("test")  # Should detect change due to order
     # Change a value
     config_path.write_text("workdir: work_dir\ntest:\n  nested:\n    a: 1\n    b: 3")
     sm.config = sm.load_config()
@@ -215,3 +213,32 @@ def test_run_output_validation_failure(tmp_path):
         RuntimeError, match=r"Output file '.*/output\.txt' was not created properly\."
     ):
         sm.run()
+
+
+def test_section_unchanged_detection(tmp_path):
+    """Test that sections detect changes correctly based on ASCII differences."""
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("workdir: work_dir\nmesh:\n  n_elem: 40\n  element_size: 0.1")
+    sm = TestStep(str(config_path))
+    sm.dependent_sections = ["mesh"]  # Change to mesh for this test
+
+    # Create input and output to avoid other triggers
+    input_path = sm.workdir / "input.txt"
+    input_path.write_text("data")
+    output_path = sm.workdir / "output.txt"
+    output_path.write_text("data")
+
+    # Initially, section changed
+    assert sm.has_section_changed("mesh")
+    sm.save_state("mesh", hash_config_section(sm.config.get("mesh", {})))
+    assert not sm.has_section_changed("mesh")
+
+    # Rewrite config with same content but different formatting (order)
+    config_path.write_text("workdir: work_dir\nmesh:\n  element_size: 0.1\n  n_elem: 40")
+    sm.config = sm.load_config()
+    assert sm.has_section_changed("mesh")  # Should detect change due to order
+
+    # Rewrite with different float representation
+    config_path.write_text("workdir: work_dir\nmesh:\n  n_elem: 40\n  element_size: 0.1000000001")
+    sm.config = sm.load_config()
+    assert sm.has_section_changed("mesh")  # Should detect change due to different ASCII

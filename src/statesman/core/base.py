@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Union
 
 import logging
-import yaml
+import ruamel.yaml as yaml
 from pydantic import BaseModel, ValidationError
 
 from statesman.utils.config_utils import hash_config_section
@@ -31,9 +31,6 @@ class Statesman:
 
     def __init__(self, config_path: str):
         self.logger = logging.getLogger(self.__class__.__name__)
-        logging.basicConfig(
-            level=logging.INFO
-        )  # Set global logging to INFO for verbosity
         self.config_path = Path(config_path).resolve()
         self.logger.info(f"Initializing Statesman with config: {self.config_path}")
         self.config = self.load_config()
@@ -62,14 +59,14 @@ class Statesman:
         """Load configuration from YAML file."""
         self.logger.info(f"Loading config from {self.config_path}")
         with open(self.config_path) as f:
-            return yaml.safe_load(f)
+            return yaml.YAML().load(f)
 
     def load_previous_states(self) -> Dict[str, str]:
         """Load previous state hashes from file."""
         if self.state_file.exists():
             self.logger.info(f"Loading previous states from {self.state_file}")
             with open(self.state_file) as f:
-                return yaml.safe_load(f) or {}
+                return yaml.YAML().load(f) or {}
         self.logger.info("No previous states found.")
         return {}
 
@@ -78,7 +75,7 @@ class Statesman:
         self.logger.info(f"Saving state for section '{section}' with hash {hash_value}")
         self.previous_states[section] = hash_value
         with open(self.state_file, "w") as f:
-            yaml.safe_dump(self.previous_states, f)
+            yaml.YAML().dump(self.previous_states, f)
 
     def has_section_changed(self, section: str) -> bool:
         """Check if a config section has changed."""
