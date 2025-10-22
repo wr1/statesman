@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "statesman"
-version = "0.1.0"
+version = "0.1.1"
 description = "Library for managing file-based states in computational workflows"
 authors = [{ name = "wr1", email = "8971152+wr1@users.noreply.github.com" }]
 license = { text = "MIT" }
