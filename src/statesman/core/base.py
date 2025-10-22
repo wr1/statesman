@@ -144,12 +144,16 @@ class Statesman:
         self.logger.info("Starting run check.")
         if self.needs_run():
             self.logger.info("Step needs to run. Executing...")
+            # Compute current hashes before execution to capture the state that triggered the run
+            current_hashes = {
+                section: hash_config_section(self.config.get(section, {}))
+                for section in self.dependent_sections
+            }
             self._execute()
             self.logger.info("Execution completed.")
             # Update states for dependent sections
             for section in self.dependent_sections:
-                current_hash = hash_config_section(self.config.get(section, {}))
-                self.save_state(section, current_hash)
+                self.save_state(section, current_hashes[section])
             # Validate outputs after execution
             for out_name in self.output_files:
                 out_path = self.workdir / out_name

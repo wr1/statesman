@@ -133,7 +133,7 @@ def test_needs_run_scenarios(tmp_path):
     config_path = tmp_path / "config.yaml"
     config_path.write_text("workdir: work_dir")
     sm = TestStep(str(config_path))
-    time.sleep(1)  # Ensure subsequent file operations have later timestamps
+    time.sleep(0.01)  # Ensure subsequent file operations have later timestamps
 
     # Missing input
     assert sm.needs_run()  # Input missing
@@ -141,7 +141,7 @@ def test_needs_run_scenarios(tmp_path):
     # Create input
     input_path = sm.workdir / "input.txt"
     input_path.write_text("data")
-    time.sleep(1)  # Ensure input mtime > config mtime
+    time.sleep(0.01)  # Ensure input mtime > config mtime
 
     # Missing output
     assert sm.needs_run()
@@ -149,7 +149,7 @@ def test_needs_run_scenarios(tmp_path):
     # Create output
     output_path = sm.workdir / "output.txt"
     output_path.write_text("data")
-    time.sleep(1)  # Ensure output mtime > input mtime
+    time.sleep(0.01)  # Ensure output mtime > input mtime
 
     # Changed section (initially no state)
     assert sm.needs_run()
@@ -160,12 +160,12 @@ def test_needs_run_scenarios(tmp_path):
 
     # Change section
     config_path.write_text("workdir: work_dir\ntest:\n  subkey: changed")
-    time.sleep(1)  # Ensure config mtime is distinct
+    time.sleep(0.01)  # Ensure config mtime is distinct
     sm.config = sm.load_config()
     assert sm.needs_run()
 
     # Simulate updating input after config change to make it newer than config
-    time.sleep(1)
+    time.sleep(0.01)
     input_path.touch()
 
     # Run the step to reset state and update outputs
@@ -173,7 +173,7 @@ def test_needs_run_scenarios(tmp_path):
     assert not sm.needs_run()
 
     # Test input newer than output
-    time.sleep(1)
+    time.sleep(0.01)
     input_path.touch()
     assert sm.needs_run()
 
@@ -242,3 +242,36 @@ def test_section_unchanged_detection(tmp_path):
     config_path.write_text("workdir: work_dir\nmesh:\n  n_elem: 40\n  element_size: 0.1000000001")
     sm.config = sm.load_config()
     assert sm.has_section_changed("mesh")  # Should detect change due to different ASCII
+
+
+def test_run_saves_current_hash(tmp_path):
+    """Test that run saves the current hash, not the previous one."""
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("workdir: work_dir\ntest:\n  subkey: initial")
+    sm = TestStep(str(config_path))
+
+    # Create input to avoid missing input trigger
+    input_path = sm.workdir / "input.txt"
+    input_path.write_text("data")
+
+    # Initially, section changed
+    assert sm.has_section_changed("test")
+    initial_hash = hash_config_section(sm.config.get("test", {}))
+    sm.save_state("test", initial_hash)
+    assert not sm.has_section_changed("test")
+
+    # Change the config
+    config_path.write_text("workdir: work_dir\ntest:\n  subkey: changed")
+    sm.config = sm.load_config()
+    time.sleep(0.01)  # Ensure config mtime is updated
+    input_path.touch()  # Make input newer than the new config
+    new_hash = hash_config_section(sm.config.get("test", {}))
+    assert sm.has_section_changed("test")
+
+    # Run the step
+    sm.run()
+
+    # After run, the saved hash should be the new_hash (current at run time)
+    assert sm.previous_states["test"] == new_hash
+    # And needs_run should be false now
+    assert not sm.needs_run()
