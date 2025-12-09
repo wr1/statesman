@@ -73,3 +73,9 @@ if __name__ == "__main__":
     print("Modified input file to make it newer.")
     print("After modification, needs_run:", p2.needs_run())  # Should be True
     p2.run()  # Should re-execute
+
+    # Demonstrate force run
+    print("After re-run, needs_run:", p2.needs_run())  # Should be False
+    print("Running with force=True to demonstrate forced execution.")
+    p2.run(force=True)  # Should execute even though needs_run is False
+    print("Force run completed.")
