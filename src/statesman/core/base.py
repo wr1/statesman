@@ -139,11 +139,11 @@ class Statesman:
         self.logger.info("No changes detected. Step does not need to run.")
         return False
 
-    def run(self):
-        """Run the step if necessary and update states."""
+    def run(self, force: bool = False):
+        """Run the step if necessary or forced, and update states."""
         self.logger.info("Starting run check.")
-        if self.needs_run():
-            self.logger.info("Step needs to run. Executing...")
+        if force or self.needs_run():
+            self.logger.info("Step needs to run or is forced. Executing...")
             # Compute current hashes before execution to capture the state that triggered the run
             current_hashes = {
                 section: hash_config_section(self.config.get(section, {}))

@@ -275,3 +275,26 @@ def test_run_saves_current_hash(tmp_path):
     assert sm.previous_states["test"] == new_hash
     # And needs_run should be false now
     assert not sm.needs_run()
+
+
+def test_run_force_flag(tmp_path):
+    """Test that the force flag causes execution even when needs_run is False."""
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("workdir: work_dir\ntest:\n  subkey: value")
+    sm = TestStep(str(config_path))
+
+    # Create input and output, and save state so needs_run is False
+    input_path = sm.workdir / "input.txt"
+    input_path.write_text("data")
+    output_path = sm.workdir / "output.txt"
+    output_path.write_text("initial")
+    sm.save_state("test", hash_config_section(sm.config.get("test", {})))
+
+    # Confirm needs_run is False
+    assert not sm.needs_run()
+
+    # Run with force=True
+    sm.run(force=True)
+
+    # Check that _execute was called, overwriting the output
+    assert output_path.read_text() == "executed"

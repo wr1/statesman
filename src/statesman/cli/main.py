@@ -13,10 +13,11 @@ logging.basicConfig(
 )
 
 
-def check(config: str):
-    """Check states in a workflow."""
+def run(config: str, force: bool = False):
+    """Run the workflow step, optionally forcing execution."""
     statesman = Statesman(config)
-    logging.info("State check completed.")
+    statesman.run(force=force)
+    logging.info("Run completed.")
 
 
 app = cli(
@@ -29,10 +30,10 @@ app = cli(
     theme="monochrome",
 )
 
-check_cmd = command(
-    name="check",
-    help="Check states in a workflow.",
-    callback=check,
+run_cmd = command(
+    name="run",
+    help="Run the workflow step.",
+    callback=run,
     options=[
         option(
             flags=["--config", "-c"],
@@ -41,9 +42,16 @@ check_cmd = command(
             required=True,
             sort_key=0,
         ),
+        option(
+            flags=["--force", "-f"],
+            help="Force run regardless of state checks",
+            arg_type=bool,
+            default=False,
+            sort_key=1,
+        ),
     ],
 )
-app.commands.append(check_cmd)
+app.commands.append(run_cmd)
 
 
 def main():
